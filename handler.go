@@ -3,8 +3,6 @@ package go_notifier_core
 import (
 	"errors"
 	"github.com/golobby/container/v3"
-	"go-notifier-core/domains"
-	"go-notifier-core/repositories"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
@@ -37,67 +35,67 @@ func mysqlDriverDb(config DbConfig) *gorm.DB {
 }
 
 func initRepositories() {
-	_ = container.Singleton(func(db *gorm.DB) repositories.ITagRepository {
-		return repositories.NewGormTagRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) ITagRepository {
+		return NewGormTagRepository(db)
 	})
 
 	//Email repositories #start
-	_ = container.Singleton(func(db *gorm.DB) repositories.IEmailUnSubEventRepository {
-		return repositories.NewGormEmailUnSubEventRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IEmailUnSubEventRepository {
+		return NewGormEmailUnSubEventRepository(db)
 	})
 
-	_ = container.Singleton(func(db *gorm.DB) repositories.IEmailSubTagRepository {
-		return repositories.NewGormEmailSubTagRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IEmailSubTagRepository {
+		return NewGormEmailSubTagRepository(db)
 	})
 
-	_ = container.Singleton(func(db *gorm.DB) repositories.IEmailSubscriberRepository {
-		return repositories.NewGormEmailSubscriberRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IEmailSubscriberRepository {
+		return NewGormEmailSubscriberRepository(db)
 	})
 	//Email repositories #end
 
 	//Mobile repositories #start
-	_ = container.Singleton(func(db *gorm.DB) repositories.IMobileUnSubEventRepository {
-		return repositories.NewGormMobileUnSubEventRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IMobileUnSubEventRepository {
+		return NewGormMobileUnSubEventRepository(db)
 	})
 
-	_ = container.Singleton(func(db *gorm.DB) repositories.IMobileSubTagRepository {
-		return repositories.NewGormMobileSubTagRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IMobileSubTagRepository {
+		return NewGormMobileSubTagRepository(db)
 	})
 
-	_ = container.Singleton(func(db *gorm.DB) repositories.IMobileSubscriberRepository {
-		return repositories.NewGormMobileSubscriberRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IMobileSubscriberRepository {
+		return NewGormMobileSubscriberRepository(db)
 	})
 	//Mobile repositories #end
 
 	//Notification repositories #start
-	_ = container.Singleton(func(db *gorm.DB) repositories.INotifierNotificationDriverRepository {
-		return repositories.NewGormNotifierNotificationDriverRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) INotifierNotificationDriverRepository {
+		return NewGormNotifierNotificationDriverRepository(db)
 	})
 
-	_ = container.Singleton(func(db *gorm.DB) repositories.INotificationSubTagRepository {
-		return repositories.NewGormNotificationSubTagRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) INotificationSubTagRepository {
+		return NewGormNotificationSubTagRepository(db)
 	})
 
-	_ = container.Singleton(func(db *gorm.DB) repositories.INotificationSubscriberRepository {
-		return repositories.NewGormNotificationSubscriberRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) INotificationSubscriberRepository {
+		return NewGormNotificationSubscriberRepository(db)
 	})
 	//Notification repositories #end
 
 	//Campaign repositories #start
-	_ = container.Singleton(func(db *gorm.DB) repositories.IEmailTemplateRepository {
-		return repositories.NewGormEmailTemplateRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IEmailTemplateRepository {
+		return NewGormEmailTemplateRepository(db)
 	})
 
-	_ = container.Singleton(func(db *gorm.DB) repositories.IEmailServiceRepository {
-		return repositories.NewGormEmailServiceRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IEmailServiceRepository {
+		return NewGormEmailServiceRepository(db)
 	})
 
-	_ = container.Singleton(func(db *gorm.DB) repositories.IEmailStatusRepository {
-		return repositories.NewGormEmailStatusRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IEmailStatusRepository {
+		return NewGormEmailStatusRepository(db)
 	})
 
-	_ = container.Singleton(func(db *gorm.DB) repositories.IEmailCampaignRepository {
-		return repositories.NewGormEmailCampaignRepository(db)
+	_ = container.Singleton(func(db *gorm.DB) IEmailCampaignRepository {
+		return NewGormEmailCampaignRepository(db)
 	})
 	//Campaign repositories #end
 }
@@ -127,8 +125,8 @@ func Initialize(config DbConfig) {
 for creating tag use this function. If tag exists you will get error.
 *Hint* Tags stored as `lower-cases` in db
 */
-func CreateTag(name string) (*domains.NotifierTag, error) {
-	var tgRepo repositories.ITagRepository
+func CreateTag(name string) (*NotifierTag, error) {
+	var tgRepo ITagRepository
 	err := container.Resolve(&tgRepo)
 	if err != nil {
 		return nil, err
@@ -140,7 +138,7 @@ func CreateTag(name string) (*domains.NotifierTag, error) {
 		return res, errors.New("tag is exists")
 	}
 
-	tmp := domains.NewNotifierTag(nLower)
+	tmp := NewNotifierTag(nLower)
 	err = tgRepo.Create(tmp)
 	if err != nil {
 		return nil, err
@@ -151,13 +149,13 @@ func CreateTag(name string) (*domains.NotifierTag, error) {
 // DeleteTagByName
 // for deleting tag by its name use this function.
 func DeleteTagByName(name string) error {
-	var tgRepo repositories.ITagRepository
+	var tgRepo ITagRepository
 	err := container.Resolve(&tgRepo)
 	if err != nil {
 		return err
 	}
 
-	tmp := &domains.NotifierTag{
+	tmp := &NotifierTag{
 		Name: strings.ToLower(name),
 	}
 	err = tgRepo.Delete(tmp)
@@ -169,8 +167,8 @@ func DeleteTagByName(name string) error {
 
 // GetTagByName
 // for getting tag by its name use this function.
-func GetTagByName(name string) (*domains.NotifierTag, error) {
-	var tgRepo repositories.ITagRepository
+func GetTagByName(name string) (*NotifierTag, error) {
+	var tgRepo ITagRepository
 	err := container.Resolve(&tgRepo)
 	if err != nil {
 		return nil, err
@@ -186,13 +184,13 @@ func GetTagByName(name string) (*domains.NotifierTag, error) {
 
 // TagsList
 // for getting tags list use this function.
-func TagsList() ([]domains.NotifierTag, error) {
-	var tgRepo repositories.ITagRepository
+func TagsList() ([]NotifierTag, error) {
+	var tgRepo ITagRepository
 	err := container.Resolve(&tgRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []domains.NotifierTag
+	var data []NotifierTag
 	tgRepo.All(data)
 	return data, nil
 }
@@ -242,18 +240,18 @@ func checkAllTagExists(tags []string) bool {
 
 // Email subscribe functions #start
 
-func SubscribeEmail(email, fName, lName string, tags []string, createTag bool) (*domains.NotifierEmailSubscriber, error) {
+func SubscribeEmail(email, fName, lName string, tags []string, createTag bool) (*NotifierEmailSubscriber, error) {
 	tagsEntity, err := fetchTags(tags, createTag)
 	if err != nil {
 		return nil, err
 	}
 
-	var subRepo repositories.IEmailSubscriberRepository
+	var subRepo IEmailSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		return nil, err
 	}
-	subscriber := domains.NewNotifierEmailSubscriber(email, fName, lName)
+	subscriber := NewNotifierEmailSubscriber(email, fName, lName)
 	err = subRepo.Create(subscriber)
 	if err != nil {
 		return nil, err
@@ -275,7 +273,7 @@ func AssignTagsToEmail(email string, tags []string, createTag bool) error {
 		return err
 	}
 
-	var subRepo repositories.IEmailSubscriberRepository
+	var subRepo IEmailSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		return err
@@ -309,7 +307,7 @@ func RemoveTagsFromEmail(email string, tags []string) error {
 		}
 	}
 
-	var subRepo repositories.IEmailSubscriberRepository
+	var subRepo IEmailSubscriberRepository
 	err := container.Resolve(&subRepo)
 	if err != nil {
 		return err
@@ -328,7 +326,7 @@ func RemoveTagsFromEmail(email string, tags []string) error {
 }
 
 func UnSubscribeEmail(email string, unsubId uint64) error {
-	var subRepo repositories.IEmailSubscriberRepository
+	var subRepo IEmailSubscriberRepository
 	err := container.Resolve(&subRepo)
 	if err != nil {
 		return err
@@ -339,7 +337,7 @@ func UnSubscribeEmail(email string, unsubId uint64) error {
 		return err
 	}
 
-	var eventRepo repositories.IEmailUnSubEventRepository
+	var eventRepo IEmailUnSubEventRepository
 	err = container.Resolve(&eventRepo)
 	if err != nil {
 		return err
@@ -362,41 +360,41 @@ func UnSubscribeEmail(email string, unsubId uint64) error {
 	return nil
 }
 
-func EmailUnsubscribeEventsList() ([]domains.NotifierEmailUnsubscribeEvent, error) {
-	var eventRepo repositories.IEmailUnSubEventRepository
+func EmailUnsubscribeEventsList() ([]NotifierEmailUnsubscribeEvent, error) {
+	var eventRepo IEmailUnSubEventRepository
 	err := container.Resolve(&eventRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []domains.NotifierEmailUnsubscribeEvent
+	var data []NotifierEmailUnsubscribeEvent
 	eventRepo.All(data)
 	return data, nil
 }
 
-func GetTagEmailSubscribers(tag string) ([]domains.NotifierEmailSubscriber, error) {
+func GetTagEmailSubscribers(tag string) ([]NotifierEmailSubscriber, error) {
 	tmp, err := GetTagByName(tag)
 	if err != nil {
 		return nil, err
 	}
 
-	var subRepo repositories.IEmailSubscriberRepository
+	var subRepo IEmailSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []domains.NotifierEmailSubscriber
+	var data []NotifierEmailSubscriber
 	subRepo.GetSubscribersForTag(tmp.ID, data)
 	return data, nil
 }
 
-func GetUnsubscribedEmails() ([]domains.NotifierEmailSubscriber, error) {
-	var subRepo repositories.IEmailSubscriberRepository
+func GetUnsubscribedEmails() ([]NotifierEmailSubscriber, error) {
+	var subRepo IEmailSubscriberRepository
 	err := container.Resolve(&subRepo)
 	if err != nil {
 		return nil, err
 	}
 
-	var data []domains.NotifierEmailSubscriber
+	var data []NotifierEmailSubscriber
 	subRepo.GetUnSubscribed(data)
 	return data, nil
 }
@@ -405,18 +403,18 @@ func GetUnsubscribedEmails() ([]domains.NotifierEmailSubscriber, error) {
 
 // Mobile subscribe functions #start
 
-func SubscribeMobile(countryCode, mobile, fName, lName string, tags []string, createTag bool) (*domains.NotifierMobileSubscriber, error) {
+func SubscribeMobile(countryCode, mobile, fName, lName string, tags []string, createTag bool) (*NotifierMobileSubscriber, error) {
 	tagsEntity, err := fetchTags(tags, createTag)
 	if err != nil {
 		return nil, err
 	}
 
-	var subRepo repositories.IMobileSubscriberRepository
+	var subRepo IMobileSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		return nil, err
 	}
-	subscriber := domains.NewNotifierMobileSubscriber(countryCode, mobile, fName, lName)
+	subscriber := NewNotifierMobileSubscriber(countryCode, mobile, fName, lName)
 	err = subRepo.Create(subscriber)
 	if err != nil {
 		return nil, err
@@ -439,7 +437,7 @@ func AssignTagsToMobile(mobile string, tags []string, createTag bool) error {
 		return err
 	}
 
-	var subRepo repositories.IMobileSubscriberRepository
+	var subRepo IMobileSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		return err
@@ -473,7 +471,7 @@ func RemoveTagsFromMobile(mobile string, tags []string) error {
 		}
 	}
 
-	var subRepo repositories.IMobileSubscriberRepository
+	var subRepo IMobileSubscriberRepository
 	err := container.Resolve(&subRepo)
 	if err != nil {
 		return err
@@ -492,7 +490,7 @@ func RemoveTagsFromMobile(mobile string, tags []string) error {
 }
 
 func UnSubscribeMobile(mobile string, unsubId uint64) error {
-	var subRepo repositories.IMobileSubscriberRepository
+	var subRepo IMobileSubscriberRepository
 	err := container.Resolve(&subRepo)
 	if err != nil {
 		return err
@@ -503,7 +501,7 @@ func UnSubscribeMobile(mobile string, unsubId uint64) error {
 		return err
 	}
 
-	var eventRepo repositories.IMobileUnSubEventRepository
+	var eventRepo IMobileUnSubEventRepository
 	err = container.Resolve(&eventRepo)
 	if err != nil {
 		return err
@@ -526,41 +524,41 @@ func UnSubscribeMobile(mobile string, unsubId uint64) error {
 	return nil
 }
 
-func MobileUnsubscribeEventsList() ([]domains.NotifierMobileUnsubscribeEvent, error) {
-	var eventRepo repositories.IMobileUnSubEventRepository
+func MobileUnsubscribeEventsList() ([]NotifierMobileUnsubscribeEvent, error) {
+	var eventRepo IMobileUnSubEventRepository
 	err := container.Resolve(&eventRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []domains.NotifierMobileUnsubscribeEvent
+	var data []NotifierMobileUnsubscribeEvent
 	eventRepo.All(data)
 	return data, nil
 }
 
-func GetTagMobileSubscribers(tag string) ([]domains.NotifierMobileSubscriber, error) {
+func GetTagMobileSubscribers(tag string) ([]NotifierMobileSubscriber, error) {
 	tmp, err := GetTagByName(tag)
 	if err != nil {
 		return nil, err
 	}
 
-	var subRepo repositories.IMobileSubscriberRepository
+	var subRepo IMobileSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []domains.NotifierMobileSubscriber
+	var data []NotifierMobileSubscriber
 	subRepo.GetSubscribersForTag(tmp.ID, data)
 	return data, nil
 }
 
-func GetUnsubscribedMobiles() ([]domains.NotifierMobileSubscriber, error) {
-	var subRepo repositories.IMobileSubscriberRepository
+func GetUnsubscribedMobiles() ([]NotifierMobileSubscriber, error) {
+	var subRepo IMobileSubscriberRepository
 	err := container.Resolve(&subRepo)
 	if err != nil {
 		return nil, err
 	}
 
-	var data []domains.NotifierMobileSubscriber
+	var data []NotifierMobileSubscriber
 	subRepo.GetUnSubscribed(data)
 	return data, nil
 }
@@ -569,7 +567,7 @@ func GetUnsubscribedMobiles() ([]domains.NotifierMobileSubscriber, error) {
 
 // Notification subscribe functions #start
 
-func AddNewToken(token, fName, lName string, driverId uint64, tags []string, createTag bool) (*domains.NotifierNotificationSubscriber, error) {
+func AddNewToken(token, fName, lName string, driverId uint64, tags []string, createTag bool) (*NotifierNotificationSubscriber, error) {
 	var tagsEntity []uint64
 	if len(tags) == 0 {
 		tmp, err := CreateTag("all")
@@ -598,7 +596,7 @@ func AddNewToken(token, fName, lName string, driverId uint64, tags []string, cre
 		}
 	}
 
-	var driverRepo repositories.INotifierNotificationDriverRepository
+	var driverRepo INotifierNotificationDriverRepository
 	err := container.Resolve(&driverRepo)
 	if err != nil {
 		return nil, err
@@ -609,12 +607,12 @@ func AddNewToken(token, fName, lName string, driverId uint64, tags []string, cre
 		return nil, err
 	}
 
-	var subRepo repositories.INotificationSubscriberRepository
+	var subRepo INotificationSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		return nil, err
 	}
-	subscriber := domains.NewNotifierNotificationSubscriber(token, fName, lName, driverId)
+	subscriber := NewNotifierNotificationSubscriber(token, fName, lName, driverId)
 	err = subRepo.Create(subscriber)
 	if err != nil {
 		return nil, err
@@ -651,7 +649,7 @@ func AssignTagsToToken(token string, tags []string, createTag bool) error {
 		}
 	}
 
-	var subRepo repositories.INotificationSubscriberRepository
+	var subRepo INotificationSubscriberRepository
 	err := container.Resolve(&subRepo)
 	if err != nil {
 		return err
@@ -686,7 +684,7 @@ func RemoveTagsFromToken(token string, tags []string) error {
 		}
 	}
 
-	var subRepo repositories.INotificationSubscriberRepository
+	var subRepo INotificationSubscriberRepository
 	err := container.Resolve(&subRepo)
 	if err != nil {
 		return err
@@ -705,7 +703,7 @@ func RemoveTagsFromToken(token string, tags []string) error {
 }
 
 func RemoveToken(token string) error {
-	var subRepo repositories.INotificationSubscriberRepository
+	var subRepo INotificationSubscriberRepository
 	err := container.Resolve(&subRepo)
 	if err != nil {
 		return err
@@ -723,58 +721,58 @@ func RemoveToken(token string) error {
 	return nil
 }
 
-func GetTagTokenSubscribers(tag string) ([]domains.NotifierNotificationSubscriber, error) {
+func GetTagTokenSubscribers(tag string) ([]NotifierNotificationSubscriber, error) {
 	tmp, err := GetTagByName(tag)
 	if err != nil {
 		return nil, err
 	}
 
-	var subRepo repositories.INotificationSubscriberRepository
+	var subRepo INotificationSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []domains.NotifierNotificationSubscriber
+	var data []NotifierNotificationSubscriber
 	subRepo.GetSubscribersForTag(tmp.ID, data)
 	return data, nil
 }
 
-func GetTagAndDriverTokenSubscribers(tag string, driverId uint64) ([]domains.NotifierNotificationSubscriber, error) {
+func GetTagAndDriverTokenSubscribers(tag string, driverId uint64) ([]NotifierNotificationSubscriber, error) {
 	tmp, err := GetTagByName(tag)
 	if err != nil {
 		return nil, err
 	}
 
-	var subRepo repositories.INotificationSubscriberRepository
+	var subRepo INotificationSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []domains.NotifierNotificationSubscriber
+	var data []NotifierNotificationSubscriber
 	subRepo.GetSubscribersForTagAndDriver(tmp.ID, driverId, data)
 	return data, nil
 }
 
-func NotificationDriversList() ([]domains.NotifierNotificationDriver, error) {
-	var tgRepo repositories.INotifierNotificationDriverRepository
+func NotificationDriversList() ([]NotifierNotificationDriver, error) {
+	var tgRepo INotifierNotificationDriverRepository
 	err := container.Resolve(&tgRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []domains.NotifierNotificationDriver
+	var data []NotifierNotificationDriver
 	tgRepo.All(data)
 	return data, nil
 }
 
 // Notification subscribe functions #end
 
-func CreateEmailTemplate(name, content string) (*domains.NotifierEmailCampaignTemplate, error) {
-	var tmRepo repositories.IEmailTemplateRepository
+func CreateEmailTemplate(name, content string) (*NotifierEmailCampaignTemplate, error) {
+	var tmRepo IEmailTemplateRepository
 	err := container.Resolve(&tmRepo)
 	if err != nil {
 		return nil, err
 	}
-	tmp := domains.NewNotifierEmailCampaignTemplate(content, name)
+	tmp := NewNotifierEmailCampaignTemplate(content, name)
 	err = tmRepo.Create(tmp)
 	if err != nil {
 		return nil, err
@@ -782,8 +780,8 @@ func CreateEmailTemplate(name, content string) (*domains.NotifierEmailCampaignTe
 	return tmp, nil
 }
 
-func UpdateEmailTemplate(id uint64, name, content string) (*domains.NotifierEmailCampaignTemplate, error) {
-	var tmRepo repositories.IEmailTemplateRepository
+func UpdateEmailTemplate(id uint64, name, content string) (*NotifierEmailCampaignTemplate, error) {
+	var tmRepo IEmailTemplateRepository
 	err := container.Resolve(&tmRepo)
 	if err != nil {
 		return nil, err
@@ -803,22 +801,22 @@ func UpdateEmailTemplate(id uint64, name, content string) (*domains.NotifierEmai
 }
 
 func DeleteEmailTemplate(id uint64) error {
-	var tmRepo repositories.IEmailTemplateRepository
+	var tmRepo IEmailTemplateRepository
 	err := container.Resolve(&tmRepo)
 	if err != nil {
 		return err
 	}
-	err = tmRepo.Delete(&domains.NotifierEmailCampaignTemplate{ID: id})
+	err = tmRepo.Delete(&NotifierEmailCampaignTemplate{ID: id})
 	return err
 }
 
-func EmailTemplateList() ([]domains.NotifierEmailCampaignTemplate, error) {
-	var tgRepo repositories.IEmailTemplateRepository
+func EmailTemplateList() ([]NotifierEmailCampaignTemplate, error) {
+	var tgRepo IEmailTemplateRepository
 	err := container.Resolve(&tgRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []domains.NotifierEmailCampaignTemplate
+	var data []NotifierEmailCampaignTemplate
 	tgRepo.All(data)
 	return data, nil
 }
@@ -835,8 +833,8 @@ type EmailCampaignCreateData struct {
 	Tags           []uint64
 }
 
-func AddEmailCampaign(data *EmailCampaignCreateData) (*domains.NotifierEmailCampaign, error) {
-	var tmRepo repositories.IEmailTemplateRepository
+func AddEmailCampaign(data *EmailCampaignCreateData) (*NotifierEmailCampaign, error) {
+	var tmRepo IEmailTemplateRepository
 	err := container.Resolve(&tmRepo)
 	if err != nil {
 		return nil, err
@@ -846,12 +844,12 @@ func AddEmailCampaign(data *EmailCampaignCreateData) (*domains.NotifierEmailCamp
 		return nil, err
 	}
 
-	var cmRepo repositories.IEmailCampaignRepository
+	var cmRepo IEmailCampaignRepository
 	err = container.Resolve(&cmRepo)
 	if err != nil {
 		return nil, err
 	}
-	tmp := domains.NewNotifierEmailCampaign(
+	tmp := NewNotifierEmailCampaign(
 		data.EmailServiceId,
 		data.ScheduledAt,
 		data.TemplateId,
@@ -875,7 +873,7 @@ func AddEmailCampaign(data *EmailCampaignCreateData) (*domains.NotifierEmailCamp
 }
 
 func DeleteEmailCampaign(campaign uint64) error {
-	var cmRepo repositories.IEmailCampaignRepository
+	var cmRepo IEmailCampaignRepository
 	err := container.Resolve(&cmRepo)
 	if err != nil {
 		return err
@@ -906,7 +904,7 @@ type EmailCampaignUpdateData struct {
 }
 
 func UpdateEmailCampaign(cmpId uint64, data *EmailCampaignUpdateData) error {
-	var tmRepo repositories.IEmailTemplateRepository
+	var tmRepo IEmailTemplateRepository
 	err := container.Resolve(&tmRepo)
 	if err != nil {
 		return err
@@ -916,7 +914,7 @@ func UpdateEmailCampaign(cmpId uint64, data *EmailCampaignUpdateData) error {
 		return err
 	}
 
-	var cmRepo repositories.IEmailCampaignRepository
+	var cmRepo IEmailCampaignRepository
 	err = container.Resolve(&cmRepo)
 	if err != nil {
 		return err

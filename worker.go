@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golobby/container/v3"
-	"go-notifier-core/domains"
-	"go-notifier-core/repositories"
 	"log"
 	"time"
 )
@@ -37,7 +35,7 @@ type (
 
 func (e EmailWorker) Run() {
 
-	var campaignRepo repositories.IEmailCampaignRepository
+	var campaignRepo IEmailCampaignRepository
 	err := container.Resolve(&campaignRepo)
 	if err != nil {
 		log.Fatalf("Error during resolve : %s", err)
@@ -60,7 +58,7 @@ func (e EmailWorker) Run() {
 		return
 	}
 
-	var subRepo repositories.IEmailSubscriberRepository
+	var subRepo IEmailSubscriberRepository
 	err = container.Resolve(&subRepo)
 	if err != nil {
 		log.Fatalf("Error during resolve : %s", err)
@@ -74,7 +72,7 @@ func (e EmailWorker) Run() {
 	_ = campaignRepo.Update(campaign)
 	subscribers := subRepo.GetUsersByTagId(tags)
 	for _, subscriber := range subscribers {
-		queue.Send(NewQueueMessage(sendEmail, domains.NewNotifierEmailMessage(
+		queue.Send(NewQueueMessage(sendEmail, NewNotifierEmailMessage(
 			subscriber.Email,
 			subscriber.ID,
 			"campaign",
@@ -93,12 +91,12 @@ func (e EmailWorker) Run() {
 }
 
 func sendEmail(data any) error {
-	message, ok := data.(*domains.NotifierEmailMessage)
+	message, ok := data.(*NotifierEmailMessage)
 	if !ok {
 		return errors.New("invalid data message to send email")
 	}
 
-	var messageRepo repositories.IEmailMessageRepository
+	var messageRepo IEmailMessageRepository
 	err := container.Resolve(&messageRepo)
 	if err != nil {
 		return err
@@ -113,7 +111,7 @@ func sendEmail(data any) error {
 		return err
 	}
 
-	var emailServiceRepo repositories.IEmailServiceRepository
+	var emailServiceRepo IEmailServiceRepository
 	err = container.Resolve(&emailServiceRepo)
 	if err != nil {
 		return err
@@ -151,7 +149,7 @@ func sendEmail(data any) error {
 	return nil
 }
 
-func handleMail(service *domains.NotifierEmailService, message *domains.NotifierEmailMessage) error {
+func handleMail(service *NotifierEmailService, message *NotifierEmailMessage) error {
 	var mailer Mailer
 	err := container.NamedResolve(&mailer, service.Type)
 	if err != nil {

@@ -1,7 +1,6 @@
 package go_notifier_core
 
 import (
-	"go-notifier-core/domains"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
@@ -23,22 +22,22 @@ type gormMigrator struct {
 func (g gormMigrator) migrate() error {
 	//TODO change migrations
 	return g.db.AutoMigrate(
-		domains.NotifierTag{},
-		domains.NotifierEmailUnsubscribeEvent{},
-		domains.NotifierEmailSubscriber{},
-		domains.NotifierEmailSubTag{},
-		domains.NotifierMobileUnsubscribeEvent{},
-		domains.NotifierMobileSubscriber{},
-		domains.NotifierMobileSubTag{},
-		domains.NotifierNotificationDriver{},
-		domains.NotifierNotificationSubscriber{},
-		domains.NotifierNotificationSubTag{},
-		domains.NotifierEmailCampaignTemplate{},
-		domains.NotifierEmailService{},
-		domains.NotifierEmailStatus{},
-		domains.NotifierEmailCampaign{},
-		domains.NotifierEmailCampaignTag{},
-		domains.NotifierEmailMessage{},
+		NotifierTag{},
+		NotifierEmailUnsubscribeEvent{},
+		NotifierEmailSubscriber{},
+		NotifierEmailSubTag{},
+		NotifierMobileUnsubscribeEvent{},
+		NotifierMobileSubscriber{},
+		NotifierMobileSubTag{},
+		NotifierNotificationDriver{},
+		NotifierNotificationSubscriber{},
+		NotifierNotificationSubTag{},
+		NotifierEmailCampaignTemplate{},
+		NotifierEmailService{},
+		NotifierEmailStatus{},
+		NotifierEmailCampaign{},
+		NotifierEmailCampaignTag{},
+		NotifierEmailMessage{},
 	)
 }
 
