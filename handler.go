@@ -766,6 +766,8 @@ func NotificationDriversList() ([]NotifierNotificationDriver, error) {
 
 // Notification subscribe functions #end
 
+// Email Template functions #start
+
 func CreateEmailTemplate(name, content string) (*NotifierEmailCampaignTemplate, error) {
 	var tmRepo IEmailTemplateRepository
 	err := container.Resolve(&tmRepo)
@@ -945,3 +947,5 @@ func UpdateEmailCampaign(cmpId uint64, data *EmailCampaignUpdateData) error {
 	}
 	return err
 }
+
+// Email Template functions #end
