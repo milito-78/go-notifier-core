@@ -35,42 +35,36 @@ type (
 
 func (e EmailWorker) Run() {
 
-	var campaignRepo IEmailCampaignRepository
-	err := container.Resolve(&campaignRepo)
+	campaign, err := GetLatestCampaignForRun()
 	if err != nil {
-		log.Fatalf("Error during resolve : %s", err)
-	}
-	campaign, err := campaignRepo.GetLatestCampaign()
-	if err != nil {
-		time.Sleep(time.Second * 20)
+		log.Printf("error during run email worker : %s", err)
 		return
 	}
-	campaign.StatusId = 2 //TODO status picked
-	_ = campaignRepo.Update(campaign)
 
-	tags := campaignRepo.GetCampaignTags(campaign.ID)
+	campaign.StatusId = 2 //TODO status picked
+	_ = UpdateEmailCampaign(campaign)
+
+	tags := GetEmailCampaignTags(campaign.ID)
 	if len(tags) == 0 {
 		log.Printf("There is no tag saved for campagin = %d", campaign.ID)
-		err := campaignRepo.Update(campaign)
+		campaign.StatusId = 3 //TODO status failed
+		err := UpdateEmailCampaign(campaign)
 		if err != nil {
 			log.Printf("Error during update campaign : %s", err)
 		}
 		return
 	}
 
-	var subRepo IEmailSubscriberRepository
-	err = container.Resolve(&subRepo)
-	if err != nil {
-		log.Fatalf("Error during resolve : %s", err)
-	}
-
 	queue := NewQueue("Email Queue")
 	queue.StartListening()
 	defer queue.CloseWorker()
 
-	campaign.StatusId = 3 // TODO sending status
-	_ = campaignRepo.Update(campaign)
-	subscribers := subRepo.GetUsersByTagId(tags)
+	campaign.StatusId = 4 // TODO sending status
+	_ = UpdateEmailCampaign(campaign)
+	subscribers, err := GetEmailSubscribersWithTags(tags)
+	if err != nil {
+		log.Printf("error during get subs for tags email : %s", err)
+	}
 	for _, subscriber := range subscribers {
 		queue.Send(NewQueueMessage(sendEmail, NewNotifierEmailMessage(
 			subscriber.Email,
@@ -85,9 +79,8 @@ func (e EmailWorker) Run() {
 		)))
 	}
 
-	campaign.StatusId = 4 // TODO complete status
-	_ = campaignRepo.Update(campaign)
-	return
+	campaign.StatusId = 5 // TODO complete status
+	_ = UpdateEmailCampaign(campaign)
 }
 
 func sendEmail(data any) error {
@@ -96,32 +89,22 @@ func sendEmail(data any) error {
 		return errors.New("invalid data message to send email")
 	}
 
-	var messageRepo IEmailMessageRepository
-	err := container.Resolve(&messageRepo)
-	if err != nil {
-		return err
-	}
-	err = messageRepo.CheckMessageExists(message)
+	err := CheckEmailMessageExists(message)
 	if err != nil {
 		return nil
 	}
 
-	err = messageRepo.Create(message)
+	err = CreateEmailMessage(message)
 	if err != nil {
 		return err
 	}
 
-	var emailServiceRepo IEmailServiceRepository
-	err = container.Resolve(&emailServiceRepo)
-	if err != nil {
-		return err
-	}
-	service, err := emailServiceRepo.Get(message.EmailServiceId)
+	service, err := GetEmailServiceById(message.EmailServiceId)
 	if err != nil {
 		log.Printf("Error during send mail (get service): %s", err)
 		t := time.Now()
 		message.FailedAt = &t
-		er := messageRepo.Update(message)
+		er := UpdateEmailMessage(message)
 		if er != nil {
 			log.Printf("Error during update failed at : %s\n", er)
 		}
@@ -133,7 +116,7 @@ func sendEmail(data any) error {
 		log.Printf("Error during send mail : %s\n", err)
 		t := time.Now()
 		message.FailedAt = &t
-		er := messageRepo.Update(message)
+		er := UpdateEmailMessage(message)
 		if er != nil {
 			log.Printf("Error during update failed at : %s\n", er)
 		}
@@ -142,7 +125,7 @@ func sendEmail(data any) error {
 
 	t := time.Now()
 	message.SentAt = &t
-	err = messageRepo.Update(message)
+	err = UpdateEmailMessage(message)
 	if err != nil {
 		return err
 	}

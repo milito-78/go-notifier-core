@@ -120,11 +120,6 @@ func Initialize(config DbConfig) {
 
 // Tag functions #start
 
-// CreateTag
-/**
-for creating tag use this function. If tag exists you will get error.
-*Hint* Tags stored as `lower-cases` in db
-*/
 func CreateTag(name string) (*NotifierTag, error) {
 	var tgRepo ITagRepository
 	err := container.Resolve(&tgRepo)
@@ -146,8 +141,6 @@ func CreateTag(name string) (*NotifierTag, error) {
 	return tmp, nil
 }
 
-// DeleteTagByName
-// for deleting tag by its name use this function.
 func DeleteTagByName(name string) error {
 	var tgRepo ITagRepository
 	err := container.Resolve(&tgRepo)
@@ -165,8 +158,6 @@ func DeleteTagByName(name string) error {
 	return nil
 }
 
-// GetTagByName
-// for getting tag by its name use this function.
 func GetTagByName(name string) (*NotifierTag, error) {
 	var tgRepo ITagRepository
 	err := container.Resolve(&tgRepo)
@@ -182,8 +173,6 @@ func GetTagByName(name string) (*NotifierTag, error) {
 	return res, nil
 }
 
-// TagsList
-// for getting tags list use this function.
 func TagsList() ([]NotifierTag, error) {
 	var tgRepo ITagRepository
 	err := container.Resolve(&tgRepo)
@@ -396,6 +385,16 @@ func GetUnsubscribedEmails() ([]NotifierEmailSubscriber, error) {
 
 	var data []NotifierEmailSubscriber
 	subRepo.GetUnSubscribed(data)
+	return data, nil
+}
+
+func GetEmailSubscribersWithTags(tags []NotifierTag) ([]NotifierEmailSubscriber, error) {
+	var subRepo IEmailSubscriberRepository
+	err := container.Resolve(&subRepo)
+	if err != nil {
+		return nil, err
+	}
+	data := subRepo.GetUsersByTagId(tags)
 	return data, nil
 }
 
@@ -905,7 +904,7 @@ type EmailCampaignUpdateData struct {
 	Tags           []uint64
 }
 
-func UpdateEmailCampaign(cmpId uint64, data *EmailCampaignUpdateData) error {
+func UpdateEmailCampaignWithId(cmpId uint64, data *EmailCampaignUpdateData) error {
 	var tmRepo IEmailTemplateRepository
 	err := container.Resolve(&tmRepo)
 	if err != nil {
@@ -946,6 +945,90 @@ func UpdateEmailCampaign(cmpId uint64, data *EmailCampaignUpdateData) error {
 		return err
 	}
 	return err
+}
+
+func GetLatestCampaignForRun() (*NotifierEmailCampaign, error) {
+	var campaignRepo IEmailCampaignRepository
+	err := container.Resolve(&campaignRepo)
+	if err != nil {
+		log.Fatalf("Error during resolve : %s", err)
+	}
+	campaign, err := campaignRepo.GetLatestCampaign()
+	if err != nil {
+		return nil, err
+	}
+	return campaign, err
+}
+
+func UpdateEmailCampaign(campaign *NotifierEmailCampaign) error {
+	var campaignRepo IEmailCampaignRepository
+	err := container.Resolve(&campaignRepo)
+	if err != nil {
+		log.Fatalf("Error during resolve : %s", err)
+	}
+	return campaignRepo.Update(campaign)
+}
+
+func GetEmailCampaignTags(cmpId uint64) []NotifierTag {
+	var campaignRepo IEmailCampaignRepository
+	err := container.Resolve(&campaignRepo)
+	if err != nil {
+		log.Fatalf("Error during resolve : %s", err)
+	}
+	return campaignRepo.GetCampaignTags(cmpId)
+}
+
+func CheckEmailMessageExists(message *NotifierEmailMessage) error {
+	var messageRepo IEmailMessageRepository
+	err := container.Resolve(&messageRepo)
+	if err != nil {
+		return err
+	}
+	err = messageRepo.CheckMessageExists(message)
+	return err
+}
+
+func CreateEmailMessage(message *NotifierEmailMessage) error {
+	var messageRepo IEmailMessageRepository
+	err := container.Resolve(&messageRepo)
+	if err != nil {
+		return err
+	}
+	err = messageRepo.Create(message)
+	return err
+}
+
+func GetEmailServices() ([]NotifierEmailService, error) {
+	var emailServiceRepo IEmailServiceRepository
+	err := container.Resolve(&emailServiceRepo)
+	if err != nil {
+		return nil, err
+	}
+	var data []NotifierEmailService
+	emailServiceRepo.All(data)
+	return data, nil
+}
+
+func GetEmailServiceById(service uint64) (*NotifierEmailService, error) {
+	var emailServiceRepo IEmailServiceRepository
+	err := container.Resolve(&emailServiceRepo)
+	if err != nil {
+		return nil, err
+	}
+
+	tmp, err := emailServiceRepo.Get(service)
+	return tmp, err
+}
+
+func UpdateEmailMessage(message *NotifierEmailMessage) error {
+	var messageRepo IEmailMessageRepository
+	err := container.Resolve(&messageRepo)
+	if err != nil {
+		return err
+	}
+	err = messageRepo.Update(message)
+
+	return nil
 }
 
 // Email Template functions #end
