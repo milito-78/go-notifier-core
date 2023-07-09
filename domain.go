@@ -78,12 +78,11 @@ func NewNotifierEmailCampaignTag(campaignId uint64, tagId uint64) *NotifierEmail
 
 type NotifierEmailUnsubscribeEvent struct {
 	ID     uint64
-	Type   uint8
 	Reason string
 }
 
-func NewNotifierEmailUnsubscribeEvent(Type uint8, reason string) *NotifierEmailUnsubscribeEvent {
-	return &NotifierEmailUnsubscribeEvent{Type: Type, Reason: reason}
+func NewNotifierEmailUnsubscribeEvent(reason string) *NotifierEmailUnsubscribeEvent {
+	return &NotifierEmailUnsubscribeEvent{Reason: reason}
 }
 
 type NotifierEmailSubscriber struct {
@@ -164,12 +163,11 @@ func NewNotifierEmailMessage(recipientEmail string, subscriberId uint64, sourceT
 
 type NotifierMobileUnsubscribeEvent struct {
 	ID     uint64
-	Type   uint8
 	Reason string
 }
 
-func NewNotifierMobileUnsubscribeEvent(Type uint8, reason string) *NotifierMobileUnsubscribeEvent {
-	return &NotifierMobileUnsubscribeEvent{Type: Type, Reason: reason}
+func NewNotifierMobileUnsubscribeEvent(reason string) *NotifierMobileUnsubscribeEvent {
+	return &NotifierMobileUnsubscribeEvent{Reason: reason}
 }
 
 type NotifierMobileSubscriber struct {
@@ -220,15 +218,13 @@ type NotifierNotificationDriver struct {
 }
 
 type NotifierNotificationSubscriber struct {
-	UnsubscribedEventId *uint64
-	UnsubscribedAt      *time.Time
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	FirstName           string
-	LastName            string
-	DriverId            uint64
-	Token               string
-	ID                  uint64
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	FirstName string
+	LastName  string
+	DriverId  uint64
+	Token     string
+	ID        uint64
 }
 
 func NewNotifierNotificationSubscriber(token, firstName, lastName string, driverId uint64) *NotifierNotificationSubscriber {

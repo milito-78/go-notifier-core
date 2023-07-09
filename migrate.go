@@ -1,6 +1,7 @@
 package go_notifier_core
 
 import (
+	"go-notifier-core/migrations"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
@@ -20,25 +21,14 @@ type gormMigrator struct {
 }
 
 func (g gormMigrator) migrate() error {
-	//TODO change migrations
-	return g.db.AutoMigrate(
-		NotifierTag{},
-		NotifierEmailUnsubscribeEvent{},
-		NotifierEmailSubscriber{},
-		NotifierEmailSubTag{},
-		NotifierMobileUnsubscribeEvent{},
-		NotifierMobileSubscriber{},
-		NotifierMobileSubTag{},
-		NotifierNotificationDriver{},
-		NotifierNotificationSubscriber{},
-		NotifierNotificationSubTag{},
-		NotifierEmailCampaignTemplate{},
-		NotifierEmailService{},
-		NotifierEmailStatus{},
-		NotifierEmailCampaign{},
-		NotifierEmailCampaignTag{},
-		NotifierEmailMessage{},
-	)
+	mgs := migrations.GetMigrationsList(g.db)
+	for _, migration := range mgs {
+		err := migration.Up()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type DbConfig struct {
@@ -54,7 +44,9 @@ func Migrate(config DbConfig) {
 	m := driverFactory(config)
 	err := m.migrate()
 	if err != nil {
-		log.Fatalf("Error during migrate : %s", err)
+		log.Fatalf("Error during migrate : %s\n", err)
+	} else {
+		log.Println("Migration runs successfully")
 	}
 }
 
