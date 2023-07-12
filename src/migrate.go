@@ -1,4 +1,4 @@
-package go_notifier_core
+package src
 
 import (
 	"go-notifier-core/migrations"

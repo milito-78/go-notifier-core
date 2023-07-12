@@ -12,7 +12,7 @@ type migrator interface {
 
 type notifierTag struct {
 	gorm.Model
-	EmailSubscribers        []notifierEmailSubscriber        `gorm:"many2many:notifier_email_sub_tags;"`
+	EmailSubscribers        []notifierEmailSubscriber        `gorm:"many2many:notifier_email_sub_tags;ForeignKey:id;References:id;JoinForeignKey:TagId;joinReferences:EmailSubscriberId"`
 	MobileSubscribers       []notifierMobileSubscriber       `gorm:"many2many:notifier_mobile_sub_tags;"`
 	NotificationSubscribers []notifierNotificationSubscriber `gorm:"many2many:notifier_notification_sub_tags;"`
 	EmailCampaigns          []notifierEmailCampaign          `gorm:"many2many:notifier_email_campaign_tags;"`
@@ -67,11 +67,18 @@ type notifierEmailSubscriber struct {
 	UnsubscribedAt      *time.Time
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
-	Tags                []notifierTag `gorm:"many2many:notifier_email_sub_tags;"`
+	Tags                []notifierTag `gorm:"many2many:notifier_email_sub_tags;ForeignKey:id;References:id;JoinForeignKey:EmailSubscriberId;joinReferences:TagId"` //
 	FirstName           string
 	LastName            string
 	Email               string `gorm:"index:email_index"`
 	ID                  uint64 `gorm:"primarykey"`
+}
+
+type notifierEmailSubTag struct {
+	EmailSubscriberId uint64 `gorm:"primarykey"`
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	TagId             uint64 `gorm:"primarykey"`
 }
 
 type createEmailSubscriber struct {
@@ -80,7 +87,8 @@ type createEmailSubscriber struct {
 
 func (c createEmailSubscriber) Up() error {
 	if !c.mg.HasTable(&notifierEmailSubscriber{}) {
-		return c.mg.CreateTable(&notifierEmailSubscriber{})
+		//_ = c.mg.AutoMigrate(&notifierEmailSubTag{})
+		return c.mg.AutoMigrate(&notifierEmailSubscriber{})
 	}
 	return nil
 }

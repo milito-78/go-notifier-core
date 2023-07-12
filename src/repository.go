@@ -1,4 +1,4 @@
-package go_notifier_core
+package src
 
 import (
 	"errors"
@@ -20,7 +20,7 @@ type IRepository[Model interface{}] interface {
 	Update(*Model) error
 	Delete(*Model) error
 	Get(id uint64) (*Model, error)
-	All(data []Model)
+	All(data *[]Model)
 }
 
 type gormRepository[m interface{}] struct {
@@ -52,8 +52,8 @@ func (g gormRepository[m]) Get(id uint64) (*m, error) {
 	}
 }
 
-func (g gormRepository[m]) All(data []m) {
-	g.db.Find(&data)
+func (g gormRepository[m]) All(data *[]m) {
+	g.db.Find(data)
 }
 
 //Campaign repositories

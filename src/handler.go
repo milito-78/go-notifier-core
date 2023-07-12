@@ -1,4 +1,4 @@
-package go_notifier_core
+package src
 
 import (
 	"errors"
@@ -107,7 +107,7 @@ func initMailers() {
 }
 
 func Initialize(config DbConfig) {
-	err := container.NamedSingleton("db", func() *gorm.DB {
+	err := container.Singleton(func() *gorm.DB {
 		return dbFactory(config)
 	})
 	if err != nil {
@@ -129,7 +129,7 @@ func CreateTag(name string) (*NotifierTag, error) {
 	nLower := strings.ToLower(name)
 
 	res, err := tgRepo.GetByName(nLower)
-	if res.ID != 0 && err == nil {
+	if err == nil || errors.Is(err, &NotFoundError{}) {
 		return res, errors.New("tag is exists")
 	}
 
@@ -180,7 +180,7 @@ func TagsList() ([]NotifierTag, error) {
 		return nil, err
 	}
 	var data []NotifierTag
-	tgRepo.All(data)
+	tgRepo.All(&data)
 	return data, nil
 }
 
@@ -356,7 +356,7 @@ func EmailUnsubscribeEventsList() ([]NotifierEmailUnsubscribeEvent, error) {
 		return nil, err
 	}
 	var data []NotifierEmailUnsubscribeEvent
-	eventRepo.All(data)
+	eventRepo.All(&data)
 	return data, nil
 }
 
@@ -530,7 +530,7 @@ func MobileUnsubscribeEventsList() ([]NotifierMobileUnsubscribeEvent, error) {
 		return nil, err
 	}
 	var data []NotifierMobileUnsubscribeEvent
-	eventRepo.All(data)
+	eventRepo.All(&data)
 	return data, nil
 }
 
@@ -759,7 +759,7 @@ func NotificationDriversList() ([]NotifierNotificationDriver, error) {
 		return nil, err
 	}
 	var data []NotifierNotificationDriver
-	tgRepo.All(data)
+	tgRepo.All(&data)
 	return data, nil
 }
 
@@ -818,7 +818,7 @@ func EmailTemplateList() ([]NotifierEmailCampaignTemplate, error) {
 		return nil, err
 	}
 	var data []NotifierEmailCampaignTemplate
-	tgRepo.All(data)
+	tgRepo.All(&data)
 	return data, nil
 }
 
@@ -1005,7 +1005,7 @@ func GetEmailServices() ([]NotifierEmailService, error) {
 		return nil, err
 	}
 	var data []NotifierEmailService
-	emailServiceRepo.All(data)
+	emailServiceRepo.All(&data)
 	return data, nil
 }
 
