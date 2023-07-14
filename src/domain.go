@@ -1,4 +1,4 @@
-package src
+package go_notifier_core
 
 import "time"
 
@@ -67,7 +67,6 @@ func NewNotifierEmailCampaign(emailServiceId uint64, scheduledAt *time.Time, tem
 type NotifierEmailCampaignTag struct {
 	CampaignId uint64
 	TagId      uint64
-	ID         uint64
 }
 
 func NewNotifierEmailCampaignTag(campaignId uint64, tagId uint64) *NotifierEmailCampaignTag {
@@ -108,18 +107,13 @@ func NewNotifierEmailSubscriber(email, firstName, lastName string) *NotifierEmai
 
 type NotifierEmailSubTag struct {
 	EmailSubscriberId uint64
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
 	TagId             uint64
-	ID                uint64
 }
 
 func NewNotifierEmailSubTag(emailSubscriberId uint64, tagId uint64) *NotifierEmailSubTag {
 	return &NotifierEmailSubTag{
 		EmailSubscriberId: emailSubscriberId,
 		TagId:             tagId,
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
 	}
 }
 
@@ -195,18 +189,13 @@ func NewNotifierMobileSubscriber(countryCode, mobile, firstName, lastName string
 
 type NotifierMobileSubTag struct {
 	MobileSubscriberId uint64
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
 	TagId              uint64
-	ID                 uint64
 }
 
 func NewNotifierMobileSubTag(mobileSubscriberId uint64, tagId uint64) *NotifierMobileSubTag {
 	return &NotifierMobileSubTag{
 		MobileSubscriberId: mobileSubscriberId,
 		TagId:              tagId,
-		CreatedAt:          time.Now(),
-		UpdatedAt:          time.Now(),
 	}
 }
 
@@ -240,18 +229,13 @@ func NewNotifierNotificationSubscriber(token, firstName, lastName string, driver
 
 type NotifierNotificationSubTag struct {
 	NotificationSubscriberId uint64
-	CreatedAt                time.Time
-	UpdatedAt                time.Time
 	TagId                    uint64
-	ID                       uint64
 }
 
 func NewNotifierNotificationSubTag(notificationSubscriberId uint64, tagId uint64) *NotifierNotificationSubTag {
 	return &NotifierNotificationSubTag{
 		NotificationSubscriberId: notificationSubscriberId,
 		TagId:                    tagId,
-		CreatedAt:                time.Now(),
-		UpdatedAt:                time.Now(),
 	}
 }
 

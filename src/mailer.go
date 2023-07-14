@@ -1,4 +1,4 @@
-package src
+package go_notifier_core
 
 import (
 	"encoding/json"

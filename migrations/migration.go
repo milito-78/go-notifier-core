@@ -33,6 +33,7 @@ func (c createTag) Up() error {
 
 func (c createTag) Down() error {
 	if c.mg.HasTable(&notifierTag{}) {
+		_ = c.mg.DropTable("notifier_email_sub_tags")
 		return c.mg.DropTable(&notifierTag{})
 	}
 	return nil
@@ -68,10 +69,10 @@ type notifierEmailSubscriber struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	Tags                []notifierTag `gorm:"many2many:notifier_email_sub_tags;ForeignKey:id;References:id;JoinForeignKey:EmailSubscriberId;joinReferences:TagId"` //
-	FirstName           string
-	LastName            string
-	Email               string `gorm:"index:email_index"`
-	ID                  uint64 `gorm:"primarykey"`
+	FirstName           string        `gorm:"size:255;"`
+	LastName            string        `gorm:"size:255;"`
+	Email               string        `gorm:"size:255;index:idx_email"`
+	ID                  uint64        `gorm:"primarykey"`
 }
 
 type notifierEmailSubTag struct {
@@ -87,7 +88,6 @@ type createEmailSubscriber struct {
 
 func (c createEmailSubscriber) Up() error {
 	if !c.mg.HasTable(&notifierEmailSubscriber{}) {
-		//_ = c.mg.AutoMigrate(&notifierEmailSubTag{})
 		return c.mg.AutoMigrate(&notifierEmailSubscriber{})
 	}
 	return nil
@@ -101,9 +101,9 @@ func (c createEmailSubscriber) Down() error {
 }
 
 type notifierEmailService struct {
-	Payload string `gorm:"type=longtext"`
-	Type    string
-	Name    string
+	Payload string `gorm:"type=json"`
+	Type    string `gorm:"size:255;index:idx_type"`
+	Name    string `gorm:"size:255;"`
 	ID      uint64
 }
 
@@ -126,21 +126,21 @@ func (c createEmailService) Down() error {
 }
 
 type notifierEmailMessage struct {
-	RecipientEmail string
+	RecipientEmail string               `gorm:"size:255;"`
 	EmailService   notifierEmailService `gorm:"foreignKey:EmailServiceId"`
 	EmailServiceId uint64
 	Subscriber     notifierEmailSubscriber `gorm:"foreignKey:SubscriberId"`
 	SubscriberId   uint64
-	SourceType     string
+	SourceType     string `gorm:"size:255;"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	FromEmail      string
+	FromEmail      string `gorm:"size:255;"`
 	SourceId       *uint64
-	FromName       string
+	FromName       string `gorm:"size:255;"`
 	QueuedAt       *time.Time
 	FailedAt       *time.Time
 	Message        string
-	Subject        string
+	Subject        string `gorm:"size:255;"`
 	SentAt         *time.Time
 	ID             uint64 `gorm:"primarykey"`
 }
@@ -167,7 +167,7 @@ type notifierEmailCampaignTemplate struct {
 	UpdatedAt time.Time
 	CreatedAt time.Time
 	Content   string `gorm:"type=longtext"`
-	Name      string
+	Name      string `gorm:"size:255;"`
 	ID        uint64 `gorm:"primarykey"`
 }
 
@@ -222,11 +222,11 @@ type notifierEmailCampaign struct {
 	Status         notifierEmailCampaignStatus `gorm:"foreignKey:TemplateId"`
 	Tags           []notifierTag               `gorm:"many2many:notifier_email_campaign_tags;"`
 	StatusId       uint64
-	FromEmail      string
-	FromName       string
-	Subject        string
+	FromEmail      string `gorm:"size:255;"`
+	FromName       string `gorm:"size:255;"`
+	Subject        string `gorm:"size:255;"`
 	Content        string `gorm:"type=longtext"`
-	Name           string
+	Name           string `gorm:"size:255;"`
 	ID             uint64
 }
 
@@ -280,11 +280,11 @@ type notifierMobileSubscriber struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	Tags                []notifierTag `gorm:"many2many:notifier_mobile_sub_tags;"`
-	FirstName           string
-	LastName            string
-	CountryCode         string `gorm:"index:country_index"`
-	Mobile              string `gorm:"index:mobile_index"`
-	ID                  uint64 `gorm:"primarykey"`
+	FirstName           string        `gorm:"size:255;"`
+	LastName            string        `gorm:"size:255;"`
+	CountryCode         string        `gorm:"size:100;index:country_index"`
+	Mobile              string        `gorm:"size:100;index:mobile_index"`
+	ID                  uint64        `gorm:"primarykey"`
 }
 
 type createMobileSubscriber struct {
@@ -333,12 +333,12 @@ func (c createNotificationDriver) Down() error {
 type notifierNotificationSubscriber struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Tags      []notifierTag `gorm:"many2many:notifier_notification_sub_tags;"`
-	FirstName string
-	LastName  string
+	Tags      []notifierTag              `gorm:"many2many:notifier_notification_sub_tags;"`
+	FirstName string                     `gorm:"size:255;"`
+	LastName  string                     `gorm:"size:255;"`
 	Driver    notifierNotificationDriver `gorm:"foreignKey:DriverId;"`
 	DriverId  uint64
-	Token     string `gorm:"index:mobile_index"`
+	Token     string `gorm:"size:144;index:mobile_index"`
 	ID        uint64 `gorm:"primarykey"`
 }
 

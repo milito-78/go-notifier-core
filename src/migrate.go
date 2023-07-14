@@ -1,4 +1,4 @@
-package src
+package go_notifier_core
 
 import (
 	"go-notifier-core/migrations"
@@ -16,8 +16,24 @@ type migrator interface {
 	migrate() error
 }
 
+type migratorRollback interface {
+	rollback() error
+}
+
 type gormMigrator struct {
 	db gorm.Migrator
+}
+
+func (g gormMigrator) rollback() error {
+	mgs := migrations.GetMigrationsList(g.db)
+	for i := len(mgs) - 1; i >= 0; i-- {
+		migration := mgs[i]
+		err := migration.Down()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (g gormMigrator) migrate() error {
@@ -50,6 +66,16 @@ func Migrate(config DbConfig) {
 	}
 }
 
+func MigrateRollback(config DbConfig) {
+	m := rollbackDriverFactory(config)
+	err := m.rollback()
+	if err != nil {
+		log.Fatalf("Error during rollback : %s\n", err)
+	} else {
+		log.Println("Migration rollback runs successfully")
+	}
+}
+
 func driverFactory(config DbConfig) migrator {
 	switch config.Driver {
 	case MysqlDriver:
@@ -58,7 +84,31 @@ func driverFactory(config DbConfig) migrator {
 	return mysqlDriverMigrator(config)
 }
 
+func rollbackDriverFactory(config DbConfig) migratorRollback {
+	switch config.Driver {
+	case MysqlDriver:
+		return mysqlRollbackDriverMigrator(config)
+	}
+	return mysqlRollbackDriverMigrator(config)
+}
+
 func mysqlDriverMigrator(config DbConfig) migrator {
+	if config.Password != "" {
+		config.Password = ":" + config.Password
+	}
+	dsn := config.Username + config.Password +
+		"@tcp(" + config.Host + ":" + config.Port + ")/" +
+		config.DB + "?charset=utf8&parseTime=True&loc=Local"
+
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Error during connecting db mysql driver : %s", err)
+	}
+
+	return &gormMigrator{db: db.Migrator()}
+}
+
+func mysqlRollbackDriverMigrator(config DbConfig) migratorRollback {
 	if config.Password != "" {
 		config.Password = ":" + config.Password
 	}
