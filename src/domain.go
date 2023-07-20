@@ -21,6 +21,16 @@ func NewNotifierEmailCampaignTemplate(content string, name string) *NotifierEmai
 	}
 }
 
+const (
+	NotifierEmailServiceSES = iota + 1
+	NotifierEmailServiceSendGrid
+	NotifierEmailServiceMailgun
+	NotifierEmailServicePostmark
+	NotifierEmailServiceMailjet
+	NotifierEmailServicePostal
+	NotifierEmailServiceSMTP
+)
+
 type NotifierEmailService struct {
 	Payload string `gorm:"type=longtext"`
 	Type    string
@@ -28,9 +38,25 @@ type NotifierEmailService struct {
 	ID      uint64
 }
 
-type NotifierEmailStatus struct {
+func NewNotifierEmailService(payload string, Type string, name string, ID uint64) *NotifierEmailService {
+	return &NotifierEmailService{Payload: payload, Type: Type, Name: name, ID: ID}
+}
+
+const (
+	NotifierEmailStatusDraft = iota + 1
+	NotifierEmailStatusQueued
+	NotifierEmailStatusSending
+	NotifierEmailStatusSent
+	NotifierEmailStatusCanceled
+)
+
+type NotifierEmailCampaignStatus struct {
 	Name string
 	ID   uint64
+}
+
+func NewNotifierEmailStatus(name string, ID uint64) *NotifierEmailCampaignStatus {
+	return &NotifierEmailCampaignStatus{Name: name, ID: ID}
 }
 
 type NotifierEmailCampaign struct {
@@ -74,14 +100,20 @@ func NewNotifierEmailCampaignTag(campaignId uint64, tagId uint64) *NotifierEmail
 }
 
 // Email Subscriber models
+const (
+	NotifierEmailUnsubBounce = iota + 1
+	NotifierEmailUnsubComplaint
+	NotifierEmailUnsubManualByAdmin
+	NotifierEmailUnsubManualBySubscriber
+)
 
 type NotifierEmailUnsubscribeEvent struct {
 	ID     uint64
 	Reason string
 }
 
-func NewNotifierEmailUnsubscribeEvent(reason string) *NotifierEmailUnsubscribeEvent {
-	return &NotifierEmailUnsubscribeEvent{Reason: reason}
+func NewNotifierEmailUnsubscribeEvent(reason string, ID uint64) *NotifierEmailUnsubscribeEvent {
+	return &NotifierEmailUnsubscribeEvent{Reason: reason, ID: ID}
 }
 
 type NotifierEmailSubscriber struct {

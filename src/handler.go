@@ -3,35 +3,16 @@ package go_notifier_core
 import (
 	"errors"
 	"github.com/golobby/container/v3"
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
 	"strings"
 	"time"
 )
 
+var initialized = false
+
 func dbFactory(config DbConfig) *gorm.DB {
-	switch config.Driver {
-	case MysqlDriver:
-		return mysqlDriverDb(config)
-	}
-	return mysqlDriverDb(config)
-}
-
-func mysqlDriverDb(config DbConfig) *gorm.DB {
-	if config.Password != "" {
-		config.Password = ":" + config.Password
-	}
-	dsn := config.Username + config.Password +
-		"@tcp(" + config.Host + ":" + config.Port + ")/" +
-		config.DB + "?charset=utf8&parseTime=True&loc=Local"
-
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Error during connecting db mysql driver : %s", err)
-	}
-
-	return db
+	return getDriver(config).(*gorm.DB)
 }
 
 func initRepositories() {
@@ -107,6 +88,10 @@ func initMailers() {
 }
 
 func Initialize(config DbConfig) {
+	defer func() {
+		initialized = true
+	}()
+
 	err := container.Singleton(func() *gorm.DB {
 		return dbFactory(config)
 	})

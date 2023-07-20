@@ -95,17 +95,22 @@ func NewGormEmailServiceRepository(db *gorm.DB) IEmailServiceRepository {
 }
 
 type IEmailStatusRepository interface {
-	IRepository[NotifierEmailStatus]
+	IRepository[NotifierEmailCampaignStatus]
+	FirstOrCreate(status *NotifierEmailCampaignStatus) error
 }
 
 type gormEmailStatusRepository struct {
-	gormRepository[NotifierEmailStatus]
+	gormRepository[NotifierEmailCampaignStatus]
 	db *gorm.DB
+}
+
+func (g gormEmailStatusRepository) FirstOrCreate(status *NotifierEmailCampaignStatus) error {
+	return g.db.FirstOrCreate(status).Error
 }
 
 func NewGormEmailStatusRepository(db *gorm.DB) IEmailStatusRepository {
 	return &gormEmailStatusRepository{
-		gormRepository: gormRepository[NotifierEmailStatus]{
+		gormRepository: gormRepository[NotifierEmailCampaignStatus]{
 			db: db,
 		},
 		db: db,
@@ -314,11 +319,16 @@ func NewGormEmailSubTagRepository(db *gorm.DB) IEmailSubTagRepository {
 
 type IEmailUnSubEventRepository interface {
 	IRepository[NotifierEmailUnsubscribeEvent]
+	FirstOrCreate(status *NotifierEmailUnsubscribeEvent) error
 }
 
 type gormEmailUnSubEventRepository struct {
 	gormRepository[NotifierEmailUnsubscribeEvent]
 	db *gorm.DB
+}
+
+func (g gormEmailUnSubEventRepository) FirstOrCreate(status *NotifierEmailUnsubscribeEvent) error {
+	return g.db.FirstOrCreate(status).Error
 }
 
 func NewGormEmailUnSubEventRepository(db *gorm.DB) IEmailUnSubEventRepository {
