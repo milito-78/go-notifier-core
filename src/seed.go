@@ -13,6 +13,7 @@ func Seed() error {
 
 	emailUnsubReasonSeeder()
 	emailUCampaignStatusSeeder()
+	log.Println("Seeder runs successfully")
 	return nil
 }
 
