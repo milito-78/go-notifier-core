@@ -86,6 +86,7 @@ func NewNotifierEmailUnsubscribeEvent(reason string) *NotifierEmailUnsubscribeEv
 
 type NotifierEmailSubscriber struct {
 	UnsubscribedEventId *uint64
+	Tags                []NotifierTag `gorm:"many2many:notifier_email_sub_tags;ForeignKey:id;References:id;JoinForeignKey:EmailSubscriberId;joinReferences:TagId"`
 	UnsubscribedAt      *time.Time
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
@@ -93,6 +94,10 @@ type NotifierEmailSubscriber struct {
 	LastName            string
 	Email               string
 	ID                  uint64
+}
+
+func (email *NotifierEmailSubscriber) Unsubscribable() bool {
+	return email.UnsubscribedAt != nil || email.UnsubscribedEventId != nil
 }
 
 func NewNotifierEmailSubscriber(email, firstName, lastName string) *NotifierEmailSubscriber {

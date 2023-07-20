@@ -143,7 +143,7 @@ func (g gormEmailCampaignRepository) AssignTagsToCampaign(cmpId uint64, tagsId [
 }
 
 func (g gormEmailCampaignRepository) DeleteAllTagsForCampaign(cmpId uint64) error {
-	res := g.db.Delete(NotifierEmailCampaignTag{CampaignId: cmpId})
+	res := g.db.Where("campaign_id = ?", cmpId).Delete(&NotifierEmailCampaignTag{})
 	if res.Error != nil {
 		return res.Error
 	}
@@ -200,9 +200,10 @@ type IEmailSubscriberRepository interface {
 	GetByEmail(email string) (*NotifierEmailSubscriber, error)
 	AssignTagToUser(userId uint64, tagsId []uint64) error
 	RemoveTagsFromUser(id uint64, entity []uint64) error
-	GetSubscribersForTag(tagId uint64, data []NotifierEmailSubscriber)
-	GetUnSubscribed(data []NotifierEmailSubscriber)
+	GetSubscribersForTag(tagId uint64, data *[]NotifierEmailSubscriber)
+	GetUnSubscribed(data *[]NotifierEmailSubscriber)
 	GetUsersByTagId(tags []NotifierTag) []NotifierEmailSubscriber
+	GetByEmailWithTags(email string) (*NotifierEmailSubscriber, error)
 }
 
 type gormEmailSubscriberRepository struct {
@@ -213,6 +214,14 @@ type gormEmailSubscriberRepository struct {
 func (g gormEmailSubscriberRepository) GetByEmail(email string) (*NotifierEmailSubscriber, error) {
 	var tmp NotifierEmailSubscriber
 	res := g.db.Where("email = ?", email).First(&tmp)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return &tmp, nil
+}
+func (g gormEmailSubscriberRepository) GetByEmailWithTags(email string) (*NotifierEmailSubscriber, error) {
+	var tmp NotifierEmailSubscriber
+	res := g.db.Preload("Tags").Where("email = ?", email).First(&tmp)
 	if res.Error != nil {
 		return nil, res.Error
 	}
@@ -266,11 +275,13 @@ func (g gormEmailSubscriberRepository) RemoveTagsFromUser(userId uint64, tagsId 
 	return nil
 }
 
-func (g gormEmailSubscriberRepository) GetSubscribersForTag(tagId uint64, data []NotifierEmailSubscriber) {
-	_ = g.db.Scopes(exceptUnsubscribedScope, tagIdScope(tagId)).Find(data)
+func (g gormEmailSubscriberRepository) GetSubscribersForTag(tagId uint64, data *[]NotifierEmailSubscriber) {
+	_ = g.db.Scopes(exceptUnsubscribedScope).
+		Where("id IN (SELECT email_subscriber_id FROM notifier_email_sub_tags WHERE tag_id = ?)", tagId).
+		Find(data)
 }
 
-func (g gormEmailSubscriberRepository) GetUnSubscribed(data []NotifierEmailSubscriber) {
+func (g gormEmailSubscriberRepository) GetUnSubscribed(data *[]NotifierEmailSubscriber) {
 	_ = g.db.Scopes(unsubscribedScope).Find(data)
 }
 

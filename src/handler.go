@@ -142,16 +142,22 @@ func CreateTag(name string) (*NotifierTag, error) {
 }
 
 func DeleteTagByName(name string) error {
+	if strings.ToLower(name) == "all" {
+		return errors.New("can't remove all tag")
+	}
+
 	var tgRepo ITagRepository
 	err := container.Resolve(&tgRepo)
 	if err != nil {
 		return err
 	}
 
-	tmp := &NotifierTag{
-		Name: strings.ToLower(name),
+	exists, err := tgRepo.GetByName(name)
+	if err != nil {
+		return err
 	}
-	err = tgRepo.Delete(tmp)
+
+	err = tgRepo.Delete(exists)
 	if err != nil {
 		return err
 	}
@@ -240,6 +246,13 @@ func SubscribeEmail(email, fName, lName string, tags []string, createTag bool) (
 	if err != nil {
 		return nil, err
 	}
+
+	tmp, err := subRepo.GetByEmail(email)
+	if err == nil && tmp.ID != 0 {
+		//Exists
+		return tmp, nil
+	}
+
 	subscriber := NewNotifierEmailSubscriber(email, fName, lName)
 	err = subRepo.Create(subscriber)
 	if err != nil {
@@ -267,12 +280,27 @@ func AssignTagsToEmail(email string, tags []string, createTag bool) error {
 	if err != nil {
 		return err
 	}
-	subscriber, err := subRepo.GetByEmail(email)
+	subscriber, err := subRepo.GetByEmailWithTags(email)
 	if err != nil {
 		return err
 	}
 
-	err = subRepo.AssignTagToUser(subscriber.ID, tagsEntity)
+	shouldAssign := make([]uint64, 0)
+
+	for _, tagId := range tagsEntity {
+		found := false
+		for _, tag := range subscriber.Tags {
+			if tag.ID == tagId {
+				found = true
+				break
+			}
+		}
+		if !found {
+			shouldAssign = append(shouldAssign, tagId)
+		}
+	}
+
+	err = subRepo.AssignTagToUser(subscriber.ID, shouldAssign)
 	if err != nil {
 		return err
 	}
@@ -326,6 +354,10 @@ func UnSubscribeEmail(email string, unsubId uint64) error {
 		return err
 	}
 
+	if !subscriber.Unsubscribable() {
+		return nil
+	}
+
 	var eventRepo IEmailUnSubEventRepository
 	err = container.Resolve(&eventRepo)
 	if err != nil {
@@ -372,7 +404,7 @@ func GetTagEmailSubscribers(tag string) ([]NotifierEmailSubscriber, error) {
 		return nil, err
 	}
 	var data []NotifierEmailSubscriber
-	subRepo.GetSubscribersForTag(tmp.ID, data)
+	subRepo.GetSubscribersForTag(tmp.ID, &data)
 	return data, nil
 }
 
@@ -384,7 +416,7 @@ func GetUnsubscribedEmails() ([]NotifierEmailSubscriber, error) {
 	}
 
 	var data []NotifierEmailSubscriber
-	subRepo.GetUnSubscribed(data)
+	subRepo.GetUnSubscribed(&data)
 	return data, nil
 }
 
@@ -884,7 +916,7 @@ func DeleteEmailCampaign(campaign uint64) error {
 	if err != nil {
 		return err
 	}
-
+	_ = DetachTagsForCampaign(tmp.ID)
 	err = cmRepo.Delete(tmp)
 	if err != nil {
 		return err
@@ -935,7 +967,10 @@ func UpdateEmailCampaignWithId(cmpId uint64, data *EmailCampaignUpdateData) erro
 	campaign.Content = temp.Content
 	campaign.Name = data.Name
 	campaign.UpdatedAt = time.Now()
-
+	err = cmRepo.Update(campaign)
+	if err != nil {
+		return err
+	}
 	err = cmRepo.DeleteAllTagsForCampaign(cmpId)
 	if err != nil {
 		return err
@@ -1028,6 +1063,20 @@ func UpdateEmailMessage(message *NotifierEmailMessage) error {
 	}
 	err = messageRepo.Update(message)
 
+	return nil
+}
+
+func DetachTagsForCampaign(campaign uint64) error {
+	var cmRepo IEmailCampaignRepository
+	err := container.Resolve(&cmRepo)
+	if err != nil {
+		return err
+	}
+
+	err = cmRepo.DeleteAllTagsForCampaign(campaign)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
