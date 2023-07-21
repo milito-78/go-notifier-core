@@ -23,8 +23,8 @@ type ModelGormSoftDelete struct {
 type notifierTag struct {
 	ModelGorm
 	EmailSubscribers        []notifierEmailSubscriber        `gorm:"many2many:notifier_email_sub_tags;ForeignKey:id;References:id;JoinForeignKey:TagId;joinReferences:EmailSubscriberId"`
-	MobileSubscribers       []notifierMobileSubscriber       `gorm:"many2many:notifier_mobile_sub_tags;"`
-	NotificationSubscribers []notifierNotificationSubscriber `gorm:"many2many:notifier_notification_sub_tags;"`
+	MobileSubscribers       []notifierMobileSubscriber       `gorm:"many2many:notifier_mobile_sub_tags;ForeignKey:id;References:id;JoinForeignKey:TagId;joinReferences:MobileSubscriberId"`
+	NotificationSubscribers []notifierNotificationSubscriber `gorm:"many2many:notifier_notification_sub_tags;;ForeignKey:id;References:id;JoinForeignKey:TagId;joinReferences:NotificationSubscriberId"`
 	EmailCampaigns          []notifierEmailCampaign          `gorm:"many2many:notifier_email_campaign_tags;ForeignKey:id;References:id;JoinForeignKey:TagId;joinReferences:CampaignId"`
 	Name                    string                           `gorm:"size:255;index:idx_name,unique;not null"`
 }
@@ -80,11 +80,6 @@ type notifierEmailSubscriber struct {
 	FirstName           string        `gorm:"size:255;not null"`
 	LastName            string        `gorm:"size:255;not null"`
 	Email               string        `gorm:"size:255;index:idx_email;not null"`
-}
-
-type notifierEmailSubTag struct {
-	EmailSubscriberId uint64 `gorm:"primarykey"`
-	TagId             uint64 `gorm:"primarykey"`
 }
 
 type createEmailSubscriber struct {
@@ -278,7 +273,7 @@ type notifierMobileSubscriber struct {
 	UnsubscribedEvent   *notifierMobileUnsubscribeEvent `gorm:"foreignKey:UnsubscribedEventId;"`
 	UnsubscribedEventId *uint64
 	UnsubscribedAt      *time.Time    `gorm:"type:timestamp"`
-	Tags                []notifierTag `gorm:"many2many:notifier_mobile_sub_tags;"`
+	Tags                []notifierTag `gorm:"many2many:notifier_mobile_sub_tags;ForeignKey:id;References:id;JoinForeignKey:MobileSubscriberId;joinReferences:TagId"` //
 	FirstName           string        `gorm:"not null;size:255;"`
 	LastName            string        `gorm:"not null;size:255;"`
 	CountryCode         string        `gorm:"not null;size:100;index:country_index"`
@@ -291,7 +286,7 @@ type createMobileSubscriber struct {
 
 func (c createMobileSubscriber) Up() error {
 	if !c.mg.HasTable(&notifierMobileSubscriber{}) {
-		return c.mg.CreateTable(&notifierMobileSubscriber{})
+		return c.mg.AutoMigrate(&notifierMobileSubscriber{})
 	}
 	return nil
 }
@@ -330,7 +325,7 @@ func (c createNotificationDriver) Down() error {
 
 type notifierNotificationSubscriber struct {
 	ModelGorm
-	Tags      []notifierTag              `gorm:"many2many:notifier_notification_sub_tags;"`
+	Tags      []notifierTag              `gorm:"many2many:notifier_notification_sub_tags;ForeignKey:id;References:id;JoinForeignKey:NotificationSubscriberId;joinReferences:TagId"`
 	FirstName string                     `gorm:"not null;size:255;"`
 	LastName  string                     `gorm:"not null;size:255;"`
 	Driver    notifierNotificationDriver `gorm:"foreignKey:DriverId;"`
@@ -344,7 +339,7 @@ type createNotificationSubscriber struct {
 
 func (c createNotificationSubscriber) Up() error {
 	if !c.mg.HasTable(&notifierNotificationSubscriber{}) {
-		return c.mg.CreateTable(&notifierNotificationSubscriber{})
+		return c.mg.AutoMigrate(&notifierNotificationSubscriber{})
 	}
 	return nil
 }

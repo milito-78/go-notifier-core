@@ -45,4 +45,5 @@ func emailUCampaignStatusSeeder() {
 	repo.FirstOrCreate(NewNotifierEmailStatus("Sending", NotifierEmailStatusSending))
 	repo.FirstOrCreate(NewNotifierEmailStatus("Sent", NotifierEmailStatusSent))
 	repo.FirstOrCreate(NewNotifierEmailStatus("Canceled", NotifierEmailStatusCanceled))
+	repo.FirstOrCreate(NewNotifierEmailStatus("Failed", NotifierEmailStatusFailed))
 }

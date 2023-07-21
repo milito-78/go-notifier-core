@@ -7,15 +7,16 @@ import (
 
 type (
 	Mailer interface {
-		Send(to, subject, message string) error
+		Send(fromName, fromMail, to, subject, message string) error
 		SetConfig(config []byte)
 	}
 
 	SmtpConfig struct {
-		Host     string
-		Port     string
-		From     string
-		Password string
+		Host       string
+		Port       string
+		Username   string
+		Password   string
+		Encryption string
 	}
 
 	SmtpMailer struct {
@@ -23,21 +24,24 @@ type (
 	}
 )
 
-func (s *SmtpMailer) Send(to, subject, message string) error {
-	auth := smtp.PlainAuth("", s.config.From, s.config.Password, s.config.Host)
+func (s *SmtpMailer) Send(fromName, fromMail, to, subject, message string) error {
+	auth := smtp.PlainAuth("", s.config.Username, s.config.Password, s.config.Host)
 	err := smtp.SendMail(
 		s.config.Host+":"+s.config.Port,
 		auth,
-		s.config.From,
+		fromMail,
 		[]string{to},
-		[]byte("Subject: "+subject+"\r\n\r\n"+
+		[]byte("From: "+fromName+" <"+fromMail+">\r\n"+
+			"To: "+to+"\r\n"+
+			"Subject: "+subject+"\r\n"+
+			"\r\n"+
 			message+"\r\n"),
 	)
 	return err
 }
 
 func (s *SmtpMailer) SetConfig(config []byte) {
-	err := json.Unmarshal(config, s.config)
+	err := json.Unmarshal(config, &s.config)
 	if err != nil {
 		return
 	}

@@ -78,11 +78,15 @@ func initRepositories() {
 	_ = container.Singleton(func(db *gorm.DB) IEmailCampaignRepository {
 		return NewGormEmailCampaignRepository(db)
 	})
+
+	_ = container.Singleton(func(db *gorm.DB) IEmailMessageRepository {
+		return NewGormEmailMessageRepository(db)
+	})
 	//Campaign repositories #end
 }
 
 func initMailers() {
-	_ = container.NamedSingleton("smtp", func() Mailer {
+	_ = container.NamedSingleton(NotifierEmailServiceSMTPType, func() Mailer {
 		return new(SmtpMailer)
 	})
 }
@@ -411,7 +415,8 @@ func GetEmailSubscribersWithTags(tags []NotifierTag) ([]NotifierEmailSubscriber,
 	if err != nil {
 		return nil, err
 	}
-	data := subRepo.GetUsersByTagId(tags)
+	var data []NotifierEmailSubscriber
+	subRepo.GetUsersByTagId(tags, &data)
 	return data, nil
 }
 
@@ -1005,7 +1010,14 @@ func CheckEmailMessageExists(message *NotifierEmailMessage) error {
 		return err
 	}
 	err = messageRepo.CheckMessageExists(message)
-	return err
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil || message.ID != 0 {
+		return errors.New("record found")
+	}
+
+	return nil
 }
 
 func CreateEmailMessage(message *NotifierEmailMessage) error {
@@ -1018,6 +1030,24 @@ func CreateEmailMessage(message *NotifierEmailMessage) error {
 	return err
 }
 
+func CreateEmailService(name, serviceType string, payload []byte) (*NotifierEmailService, error) {
+	var emailServiceRepo IEmailServiceRepository
+	err := container.Resolve(&emailServiceRepo)
+	if err != nil {
+		return nil, err
+	}
+	service := &NotifierEmailService{
+		Payload: string(payload),
+		Type:    serviceType,
+		Name:    name,
+	}
+
+	err = emailServiceRepo.Create(service)
+	if err != nil {
+		return nil, err
+	}
+	return service, nil
+}
 func GetEmailServices() ([]NotifierEmailService, error) {
 	var emailServiceRepo IEmailServiceRepository
 	err := container.Resolve(&emailServiceRepo)

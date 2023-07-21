@@ -29,6 +29,14 @@ const (
 	NotifierEmailServiceMailjet
 	NotifierEmailServicePostal
 	NotifierEmailServiceSMTP
+
+	NotifierEmailServiceSESType      = "SES"
+	NotifierEmailServiceSendGridType = "SendGrid"
+	NotifierEmailServiceMailgunType  = "MailGun"
+	NotifierEmailServicePostmarkType = "Postmark"
+	NotifierEmailServiceMailjetType  = "Mailjet"
+	NotifierEmailServicePostalType   = "Postal"
+	NotifierEmailServiceSMTPType     = "SMPT"
 )
 
 type NotifierEmailService struct {
@@ -48,6 +56,7 @@ const (
 	NotifierEmailStatusSending
 	NotifierEmailStatusSent
 	NotifierEmailStatusCanceled
+	NotifierEmailStatusFailed
 )
 
 type NotifierEmailCampaignStatus struct {

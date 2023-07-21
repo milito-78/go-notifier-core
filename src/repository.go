@@ -157,8 +157,9 @@ func (g gormEmailCampaignRepository) DeleteAllTagsForCampaign(cmpId uint64) erro
 
 func (g gormEmailCampaignRepository) GetLatestCampaign() (*NotifierEmailCampaign, error) {
 	var tmp NotifierEmailCampaign
-	res := g.db.Where("status_id = ?").
-		Where("scheduled_at <= ?", time.Now()).
+	res := g.db.Where("status_id = ?", NotifierEmailStatusDraft).
+		Where("scheduled_at <= ? or scheduled_at IS NULL", time.Now()).
+		Order("ID asc").
 		First(&tmp)
 
 	if res.Error != nil {
@@ -207,7 +208,7 @@ type IEmailSubscriberRepository interface {
 	RemoveTagsFromUser(id uint64, entity []uint64) error
 	GetSubscribersForTag(tagId uint64, data *[]NotifierEmailSubscriber)
 	GetUnSubscribed(data *[]NotifierEmailSubscriber)
-	GetUsersByTagId(tags []NotifierTag) []NotifierEmailSubscriber
+	GetUsersByTagId(tags []NotifierTag, data *[]NotifierEmailSubscriber)
 	GetByEmailWithTags(email string) (*NotifierEmailSubscriber, error)
 }
 
@@ -233,17 +234,17 @@ func (g gormEmailSubscriberRepository) GetByEmailWithTags(email string) (*Notifi
 	return &tmp, nil
 }
 
-func (g gormEmailSubscriberRepository) GetUsersByTagId(tags []NotifierTag) []NotifierEmailSubscriber {
-
-	var data []NotifierEmailSubscriber
+func (g gormEmailSubscriberRepository) GetUsersByTagId(tags []NotifierTag, data *[]NotifierEmailSubscriber) {
+	ids := make([]uint64, len(tags))
+	for i := 0; i < len(tags); i++ {
+		ids[i] = tags[i].ID
+	}
 	_ = g.db.
 		Table("notifier_email_subscribers AS subs").
 		Select("DISTINCT subs.*").
-		Where("subs.unsubscribed_event_id IS NOT NULL AND subs.unsubscribed_at IS NOT NULL").
-		Joins("INNER JOIN notifier_email_sub_tags AS sub_tags ON subs.id = sub_tags.subscriber_id AND sub_tags.tag_id IN ?", tags).
-		Find(&data)
-
-	return data
+		Where("subs.unsubscribed_event_id IS NULL AND subs.unsubscribed_at IS NULL").
+		Joins("INNER JOIN notifier_email_sub_tags AS sub_tags ON subs.id = sub_tags.email_subscriber_id AND sub_tags.tag_id IN ?", ids).
+		Find(data)
 }
 
 func (g gormEmailSubscriberRepository) AssignTagToUser(userId uint64, tagsId []uint64) error {

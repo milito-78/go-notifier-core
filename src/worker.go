@@ -1,7 +1,6 @@
 package go_notifier_core
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/golobby/container/v3"
@@ -41,13 +40,13 @@ func (e EmailWorker) Run() {
 		return
 	}
 
-	campaign.StatusId = 2 //TODO status picked
+	campaign.StatusId = NotifierEmailStatusDraft
 	_ = UpdateEmailCampaign(campaign)
 
 	tags := GetEmailCampaignTags(campaign.ID)
 	if len(tags) == 0 {
 		log.Printf("There is no tag saved for campagin = %d", campaign.ID)
-		campaign.StatusId = 3 //TODO status failed
+		campaign.StatusId = NotifierEmailStatusFailed
 		err := UpdateEmailCampaign(campaign)
 		if err != nil {
 			log.Printf("Error during update campaign : %s", err)
@@ -59,13 +58,15 @@ func (e EmailWorker) Run() {
 	queue.StartListening()
 	defer queue.CloseWorker()
 
-	campaign.StatusId = 4 // TODO sending status
+	campaign.StatusId = NotifierEmailStatusSending
 	_ = UpdateEmailCampaign(campaign)
 	subscribers, err := GetEmailSubscribersWithTags(tags)
 	if err != nil {
 		log.Printf("error during get subs for tags email : %s", err)
 	}
+
 	for _, subscriber := range subscribers {
+		log.Println("Subscriber id is : ", subscriber.ID)
 		queue.Send(NewQueueMessage(sendEmail, NewNotifierEmailMessage(
 			subscriber.Email,
 			subscriber.ID,
@@ -79,7 +80,7 @@ func (e EmailWorker) Run() {
 		)))
 	}
 
-	campaign.StatusId = 5 // TODO complete status
+	campaign.StatusId = NotifierEmailStatusSent
 	_ = UpdateEmailCampaign(campaign)
 }
 
@@ -88,7 +89,6 @@ func sendEmail(data any) error {
 	if !ok {
 		return errors.New("invalid data message to send email")
 	}
-
 	err := CheckEmailMessageExists(message)
 	if err != nil {
 		return nil
@@ -138,12 +138,8 @@ func handleMail(service *NotifierEmailService, message *NotifierEmailMessage) er
 	if err != nil {
 		return err
 	}
-	var tmp map[string]interface{}
-	_ = json.Unmarshal([]byte(service.Payload), &tmp)
-	tmp["from"] = message.FromEmail
-	j, _ := json.Marshal(tmp)
-	mailer.SetConfig(j)
-	return mailer.Send(message.RecipientEmail, message.Subject, message.Message)
+	mailer.SetConfig([]byte(service.Payload))
+	return mailer.Send(message.FromName, message.FromEmail, message.RecipientEmail, message.Subject, message.Message)
 }
 
 func (m MobileWorker) Run() {
@@ -200,21 +196,23 @@ func (q *Queue) CloseWorker() {
 
 func (q *Queue) listen() {
 	log.Println("Queue starts ...")
-	select {
-	case tmp := <-q.recv:
-		if tmp.handle() != true {
-			log.Println("There is an error during handle message")
-			if tmp.err != "" {
-				log.Printf("Report : %s\n", tmp.err)
+	for {
+		select {
+		case tmp := <-q.recv:
+			if tmp.handle() != true {
+				log.Println("There is an error during handle message")
+				if tmp.err != "" {
+					log.Printf("Report : %s\n", tmp.err)
+				}
+			} else {
+				log.Println("Queue handled successfully")
 			}
-		} else {
-			log.Println("Queue handled successfully")
+		case _, ok := <-q.quit:
+			if ok {
+				log.Println("Queue stops.")
+			}
+			return
 		}
-	case _, ok := <-q.quit:
-		if ok {
-			log.Println("Queue stops.")
-		}
-		return
 	}
 }
 
