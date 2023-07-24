@@ -92,7 +92,27 @@ func TestMysqlDriver(t *testing.T) {
 	// Test connecting to MySQL
 	db := mysqlDriver(config)
 	assert.NotNil(t, db, "Database connection should not be nil")
-	// Further testing on the db object and interactions with the MySQL database can be done here.
+
+	//invalidConfig := DbConfig{
+	//	Name:     "name",
+	//	Username: "test",
+	//	Password: "test",
+	//	Driver:   MysqlDriver,
+	//	Host:     "localhost",
+	//	Port:     "3306",
+	//	DB:       "notifier_test",
+	//}
+	//
+	//var buf bytes.Buffer
+	//log.SetOutput(&buf)
+	//
+	//mysqlDriver(invalidConfig)
+	//
+	//actualLog := buf.String()
+	//if actualLog == "" {
+	//	t.Errorf("Expected log message not empty")
+	//}
+
 }
 
 func TestConcurrentGetDriver(t *testing.T) {
@@ -117,6 +137,11 @@ func TestConcurrentGetDriver(t *testing.T) {
 		Password: "secret",
 		DB:       "notifier_test",
 	}
+
+	// Ensure that the drivers map is initially empty
+	driversMu.Lock()
+	drivers = make(map[string]interface{}, 2)
+	driversMu.Unlock()
 
 	// Ensure that the drivers map is initially empty
 	assert.Empty(t, drivers, "drivers map should be empty initially")

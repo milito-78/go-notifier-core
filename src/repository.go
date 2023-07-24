@@ -578,17 +578,17 @@ func NewGormNotificationSubTagRepository(db *gorm.DB) INotificationSubTagReposit
 }
 
 type INotifierNotificationDriverRepository interface {
-	IRepository[NotifierNotificationDriver]
+	IRepository[NotifierNotificationService]
 }
 
 type gormNotifierNotificationDriverRepository struct {
-	gormRepository[NotifierNotificationDriver]
+	gormRepository[NotifierNotificationService]
 	db *gorm.DB
 }
 
 func NewGormNotifierNotificationDriverRepository(db *gorm.DB) INotifierNotificationDriverRepository {
 	return &gormNotifierNotificationDriverRepository{
-		gormRepository: gormRepository[NotifierNotificationDriver]{
+		gormRepository: gormRepository[NotifierNotificationService]{
 			db: db,
 		},
 		db: db,

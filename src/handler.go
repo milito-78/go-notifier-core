@@ -774,13 +774,13 @@ func GetTagAndDriverTokenSubscribers(tag string, driverId uint64) ([]NotifierNot
 	return data, nil
 }
 
-func NotificationDriversList() ([]NotifierNotificationDriver, error) {
+func NotificationDriversList() ([]NotifierNotificationService, error) {
 	var tgRepo INotifierNotificationDriverRepository
 	err := container.Resolve(&tgRepo)
 	if err != nil {
 		return nil, err
 	}
-	var data []NotifierNotificationDriver
+	var data []NotifierNotificationService
 	tgRepo.All(&data)
 	return data, nil
 }

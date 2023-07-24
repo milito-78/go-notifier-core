@@ -46,8 +46,8 @@ type NotifierEmailService struct {
 	ID      uint64
 }
 
-func NewNotifierEmailService(payload string, Type string, name string, ID uint64) *NotifierEmailService {
-	return &NotifierEmailService{Payload: payload, Type: Type, Name: name, ID: ID}
+func NewNotifierEmailService(payload string, Type string, name string) *NotifierEmailService {
+	return &NotifierEmailService{Payload: payload, Type: Type, Name: name}
 }
 
 const (
@@ -138,7 +138,7 @@ type NotifierEmailSubscriber struct {
 }
 
 func (email *NotifierEmailSubscriber) Unsubscribable() bool {
-	return email.UnsubscribedAt != nil || email.UnsubscribedEventId != nil
+	return email.UnsubscribedAt == nil || email.UnsubscribedEventId == nil
 }
 
 func NewNotifierEmailSubscriber(email, firstName, lastName string) *NotifierEmailSubscriber {
@@ -201,13 +201,28 @@ func NewNotifierEmailMessage(recipientEmail string, subscriberId uint64, sourceT
 
 //Mobile Subscriber models
 
+const (
+	NotifierMobileServiceKavehNegarType = "KavehNegar" //Iranian provider
+)
+
+type NotifierMobileDriver struct {
+	Payload string `gorm:"type=longtext"`
+	Type    string
+	Name    string
+	ID      uint64
+}
+
+func NewNotifierMobileDriver(payload string, Type string, name string) *NotifierMobileDriver {
+	return &NotifierMobileDriver{Payload: payload, Type: Type, Name: name}
+}
+
 type NotifierMobileUnsubscribeEvent struct {
 	ID     uint64
 	Reason string
 }
 
-func NewNotifierMobileUnsubscribeEvent(reason string) *NotifierMobileUnsubscribeEvent {
-	return &NotifierMobileUnsubscribeEvent{Reason: reason}
+func NewNotifierMobileUnsubscribeEvent(reason string, ID uint64) *NotifierMobileUnsubscribeEvent {
+	return &NotifierMobileUnsubscribeEvent{Reason: reason, ID: ID}
 }
 
 type NotifierMobileSubscriber struct {
@@ -220,6 +235,10 @@ type NotifierMobileSubscriber struct {
 	LastName            string
 	Mobile              string
 	ID                  uint64
+}
+
+func (mobile *NotifierMobileSubscriber) Unsubscribable() bool {
+	return mobile.UnsubscribedAt == nil || mobile.UnsubscribedEventId == nil
 }
 
 func NewNotifierMobileSubscriber(countryCode, mobile, firstName, lastName string) *NotifierMobileSubscriber {
@@ -247,9 +266,19 @@ func NewNotifierMobileSubTag(mobileSubscriberId uint64, tagId uint64) *NotifierM
 
 // Notification subscriber models
 
-type NotifierNotificationDriver struct {
-	Name string
-	ID   uint64
+const (
+	NotifierNotificationServiceFirebaseType = "Firebase"
+)
+
+type NotifierNotificationService struct {
+	Payload string `gorm:"type=longtext"`
+	Type    string
+	Name    string
+	ID      uint64
+}
+
+func NewNotifierNotificationService(payload string, Type string, name string) *NotifierNotificationService {
+	return &NotifierNotificationService{Payload: payload, Type: Type, Name: name}
 }
 
 type NotifierNotificationSubscriber struct {
