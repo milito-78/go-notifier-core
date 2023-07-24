@@ -1048,6 +1048,7 @@ func CreateEmailService(name, serviceType string, payload []byte) (*NotifierEmai
 	}
 	return service, nil
 }
+
 func GetEmailServices() ([]NotifierEmailService, error) {
 	var emailServiceRepo IEmailServiceRepository
 	err := container.Resolve(&emailServiceRepo)

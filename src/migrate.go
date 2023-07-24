@@ -41,16 +41,6 @@ func (g gormMigrator) migrate() error {
 	return nil
 }
 
-type DbConfig struct {
-	Username string
-	Password string
-	Driver   int
-	Host     string
-	Port     string
-	Name     string
-	DB       string
-}
-
 func Migrate(config DbConfig) {
 	m := driverFactory(config)
 	err := m.migrate()
