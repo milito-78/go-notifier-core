@@ -1,7 +1,7 @@
 package go_notifier_core
 
 import (
-	"go-notifier-core/migrations"
+	"github.com/milito-78/go-notifier-core/migrations"
 	"gorm.io/gorm"
 	"log"
 )
